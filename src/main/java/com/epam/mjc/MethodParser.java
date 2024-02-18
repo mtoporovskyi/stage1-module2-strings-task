@@ -1,5 +1,9 @@
 package com.epam.mjc;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 public class MethodParser {
 
     /**
@@ -20,6 +24,54 @@ public class MethodParser {
      * @return {@link MethodSignature} object filled with parsed values from source string
      */
     public MethodSignature parseFunction(String signatureString) {
-        throw new UnsupportedOperationException("You should implement this method.");
+        String[] signatures = parseMethodSignature(signatureString);
+        List<MethodSignature.Argument> argumentList = parseMethodArguments(signatureString);
+
+        MethodSignature ms = argumentList.isEmpty() ?
+                new MethodSignature(signatures[2]) :
+                new MethodSignature(signatures[2], argumentList);
+
+        ms.setAccessModifier(signatures[0]);
+        ms.setReturnType(signatures[1]);
+        ms.setMethodName(signatures[2]);
+
+        return ms;
+    }
+
+    private String[] parseMethodSignature(String signatureString) {
+        String accessModifier = null;
+        String[] splitStr = signatureString.split(" ");
+
+        if (Objects.equals(splitStr[0], "public") || Objects.equals(splitStr[0], "protected") || Objects.equals(splitStr[0], "private")) {
+            accessModifier = splitStr[0];
+        }
+
+        String returnType = accessModifier == null ? splitStr[0] : splitStr[1];
+        String methodName = accessModifier == null ? splitStr[1] : splitStr[2];
+        String finalMethodName = methodName.split("\\(")[0];
+
+        return new String[]{accessModifier, returnType, finalMethodName};
+    }
+
+    private List<MethodSignature.Argument> parseMethodArguments(String signatureString) {
+        List<MethodSignature.Argument> argumentList = new ArrayList<>();
+        String[] splitStr = signatureString.split("\\(");
+
+        String methodArgsStr = null;
+        if (splitStr[1] != null && !splitStr[1].isEmpty()) {
+            methodArgsStr = splitStr[1].substring(0, splitStr[1].length() - 1);
+        }
+
+        String[] spitMethodArgs = null;
+        if (methodArgsStr != null && !Objects.equals(methodArgsStr, "")) {
+            spitMethodArgs = methodArgsStr.split(", ");
+
+            for (String spitMethodArg : spitMethodArgs) {
+                String[] newSplitStr = spitMethodArg.split(" ");
+                argumentList.add(new MethodSignature.Argument(newSplitStr[0], newSplitStr[1]));
+            }
+        }
+
+        return argumentList;
     }
 }
